@@ -1,0 +1,469 @@
+{
+  "name": "Delete Associations (Contact to Company)",
+  "nodes": [
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "operation": "get",
+        "contactId": {
+          "__rl": true,
+          "value": "={{ $json.results.toObjectId }}",
+          "mode": "id"
+        },
+        "additionalFields": {}
+      },
+      "id": "54f03a88-850d-492d-9e1e-bcca0778f996",
+      "name": "HubSpot",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.1,
+      "position": [
+        1640,
+        560
+      ],
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "NdgbeV1lhKBhg4W4",
+          "name": "HubSpot Production"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "272339d7-c8df-419e-b6fd-db1f9d5de14b",
+      "name": "Loop Over Items",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1300,
+        460
+      ],
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "id": "d859503e-7af0-47b7-b140-b5d7ef396885",
+      "name": "Wait",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1480,
+        560
+      ],
+      "webhookId": "4fcbfc1f-9de2-477a-a459-30fd218801f6"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "results",
+        "include": "allOtherFields",
+        "options": {}
+      },
+      "id": "5cbc2807-1b27-40d3-9d81-3ee5b4d9378a",
+      "name": "Split Out by Contact",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1140,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8807afe0-d9a9-49f0-9bee-fb7b7238f381",
+              "name": "company_id",
+              "value": 26441672960,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "53f566e2-b689-429a-87fc-698824937341",
+      "name": "Company ID",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        620,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.hubapi.com/crm/v4/objects/contacts/{{ $json.vid }}/associations/companies",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "hubspotAppToken",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "limit",
+              "value": "500"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "df6fbf32-b565-4279-8172-616263abb4fb",
+      "name": "GET Associated Companies",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1820,
+        560
+      ],
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "NdgbeV1lhKBhg4W4",
+          "name": "HubSpot Production"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.hubapi.com/crm/v4/objects/company/{{ $('Company ID').item.json.company_id }}/associations/contact",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "hubspotAppToken",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "limit",
+              "value": "500"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "44965b4e-94a3-4073-9a5c-39fcaef7ce66",
+      "name": "GET Associated Contacts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        960,
+        460
+      ],
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "NdgbeV1lhKBhg4W4",
+          "name": "HubSpot Production"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "results",
+        "include": "allOtherFields",
+        "options": {}
+      },
+      "id": "43b8b56d-0950-4564-aa0a-0b2e301e7dfa",
+      "name": "Split Out",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1980,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "resource": "company",
+        "operation": "get",
+        "companyId": {
+          "__rl": true,
+          "value": "={{ $json.results.toObjectId }}",
+          "mode": "id"
+        },
+        "additionalFields": {}
+      },
+      "id": "36eb4e19-8071-4a93-a082-ddd47a3a0452",
+      "name": "GET Company Data",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.1,
+      "position": [
+        2160,
+        560
+      ],
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "NdgbeV1lhKBhg4W4",
+          "name": "HubSpot Production"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://api.hubapi.com/crm/v4/objects/contacts/{{ $('Split Out by Contact').item.json.results.toObjectId }}/associations/companies/{{ $('Company ID').item.json.company_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "hubspotAppToken",
+        "options": {}
+      },
+      "id": "7fe271ef-54d8-410d-b7c0-5f8edc1345be",
+      "name": "DELETE Company Association",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2540,
+        660
+      ],
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "NdgbeV1lhKBhg4W4",
+          "name": "HubSpot Production"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "resource": "company",
+        "operation": "get",
+        "companyId": {
+          "__rl": true,
+          "value": "={{ $json.company_id }}",
+          "mode": "id"
+        },
+        "additionalFields": {}
+      },
+      "id": "de625ef8-9ada-407a-b70e-f6e04619cbec",
+      "name": "GET Original Company Domain",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.1,
+      "position": [
+        780,
+        460
+      ],
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "NdgbeV1lhKBhg4W4",
+          "name": "HubSpot Production"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "31b39802-c920-4fbf-a6cf-b2ca77c37fc7",
+      "name": "Start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        460,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "74c5d9b9-d457-4b29-8149-fc1763c703e2",
+              "leftValue": "={{ $('HubSpot').item.json.properties.hs_email_domain.value }}",
+              "rightValue": "gameucorp.com",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "9fbeb567-ee6e-48ee-a83b-3460ad7b06a0",
+              "leftValue": "={{ $json.properties.domain.value }}",
+              "rightValue": "={{ $('GET Original Company Domain').item.json.properties.domain.value }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "70526e4c-b6b5-45e9-b93a-95a1fc01c9ee",
+      "name": "Check Domain",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2340,
+        560
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "HubSpot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot": {
+      "main": [
+        [
+          {
+            "node": "GET Associated Companies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out by Contact": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Company ID": {
+      "main": [
+        [
+          {
+            "node": "GET Original Company Domain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET Associated Companies": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET Associated Contacts": {
+      "main": [
+        [
+          {
+            "node": "Split Out by Contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "GET Company Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET Company Data": {
+      "main": [
+        [
+          {
+            "node": "Check Domain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DELETE Company Association": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET Original Company Domain": {
+      "main": [
+        [
+          {
+            "node": "GET Associated Contacts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Company ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Domain": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "DELETE Company Association",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "32299daf-7d89-4760-8b22-b5cf21ef85e2",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f35844c20bd7f8456f907e3b5a901af1cf08cec7fee985138953357fd244e5bd"
+  },
+  "id": "NcjaISLPU8O3o9m2",
+  "tags": []
+}
